@@ -170,6 +170,34 @@ namespace Puppet_AutoLogin
             // Resize listview column to full width of window
             listView.Columns[0].Width = -2;
         }
+
+        private void MainForm_Load(object sender, EventArgs e)
+        {
+            // Load version
+            nameVersionLabel.Text = "NationStates AutoTelegram " + Application.ProductVersion;
+        }
+
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            // Don't close if currently sending telegrams
+            if (backgroundWorker.IsBusy)
+            {
+                e.Cancel = true;
+            }
+        }
+
+        private void tabControl_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (backgroundWorker.IsBusy)
+            {
+                if (tabControl.SelectedTab == puppetsTabPage)
+                {
+                    MessageBox.Show("This tab page cannot be shown while the process is running.");
+
+                    tabControl.SelectedTab = loginTabPage;
+                }
+            }
+        }
     }
 
     class Log
