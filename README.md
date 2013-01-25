@@ -1,7 +1,9 @@
 # Puppet AutoLogin #
 
 ## Introduction ##
-Puppet AutoLogin automatically logs into NationStates nations.
+Puppet AutoLogin automatically logs into NationStates nations. 
+
+(The intended application is that if you have a large number of puppets, you can more easily prevent them from CTE-ing by logging into them automatically.)
 
 ## Documentation ##
 
