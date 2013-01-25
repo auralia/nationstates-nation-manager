@@ -11,7 +11,7 @@ Puppet AutoLogin automatically logs into NationStates nations.
 * An email address
 
 ### Tutorial ###
-1. Click on the tab labeled *Puppets*, then type your puppet login information in the textbox below. TYpe in your email address as well.
+1. Click on the tab labeled *Puppets*, then type your puppet login information in the textbox below. Type in your email address as well.
 	* Each nation name and password should be separated by a comma (no spaces). One nation name and password per line.
 	* Your email address is required in addition to your username and password so that the NationStates administrators can contact you in the event of a problem with the program.
 2. Click on the tab labeled *Login* button, and start the process by clicking *Start*.

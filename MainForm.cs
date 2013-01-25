@@ -175,6 +175,8 @@ namespace Puppet_AutoLogin
         {
             // Load version
             nameVersionLabel.Text = "Puppet AutoLogin " + Application.ProductVersion;
+
+            emailTextBox.Select();
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)

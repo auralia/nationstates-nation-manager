@@ -125,7 +125,7 @@
             this.textBox.Multiline = true;
             this.textBox.Name = "textBox";
             this.textBox.Size = new System.Drawing.Size(468, 279);
-            this.textBox.TabIndex = 0;
+            this.textBox.TabIndex = 2;
             // 
             // loginTabPage
             // 
