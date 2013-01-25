@@ -139,7 +139,7 @@ namespace Puppet_AutoLogin
                 if (c.GetCookies(new Uri("http://www.nationstates.net")).Count == 0)
                     throw new Exception("Cookies missing.");
 
-                backgroundWorker.ReportProgress((int) (((double) curr / (double) total) * 100), new Log(DateTime.Now.ToLongTimeString() + ": Successfully logged into " + username, Log.Information));
+                backgroundWorker.ReportProgress((int) (((double) curr / (double) total) * 100), new Log(DateTime.Now.ToLongTimeString() + ": Successfully logged into " + username + ".", Log.Information));
 
                 try
                 {
@@ -174,7 +174,7 @@ namespace Puppet_AutoLogin
         private void MainForm_Load(object sender, EventArgs e)
         {
             // Load version
-            nameVersionLabel.Text = "NationStates AutoTelegram " + Application.ProductVersion;
+            nameVersionLabel.Text = "Puppet AutoLogin " + Application.ProductVersion;
         }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
