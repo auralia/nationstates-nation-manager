@@ -741,12 +741,12 @@ namespace Auralia.NationStates.NationManager
 
             listView.Items.Add(nationItem);
 
-            for (var i = Workers.Count - 1; i >= 0; i--)
+            for (var i = this.Workers.Count - 1; i >= 0; i--)
             {
-                if (Workers[i].Item1 == nationItem)
+                if (this.Workers[i].Item1 == nationItem)
                 {
-                    Workers[i].Item2.CancelAsync();
-                    Workers.RemoveAt(i);
+                    this.Workers[i].Item2.CancelAsync();
+                    this.Workers.RemoveAt(i);
                 }
             }
 
@@ -755,7 +755,7 @@ namespace Auralia.NationStates.NationManager
             worker.DoWork += this.RetrieveStatus;
             worker.RunWorkerCompleted += this.CompleteListViewItemUpdate;
 
-            Workers.Add(new Tuple<ListViewItem, BackgroundWorker>(nationItem, worker));
+            this.Workers.Add(new Tuple<ListViewItem, BackgroundWorker>(nationItem, worker));
 
             worker.RunWorkerAsync(nationItem);
         }
@@ -813,12 +813,12 @@ namespace Auralia.NationStates.NationManager
         /// <param name="nationItem">The <see cref="ListViewItem"/> object representing the puppet to be removed.</param>
         private void RemoveNation(ListViewItem nationItem)
         {
-            for (var i = Workers.Count - 1; i >= 0; i--)
+            for (var i = this.Workers.Count - 1; i >= 0; i--)
             {
-                if (Workers[i].Item1 == nationItem)
+                if (this.Workers[i].Item1 == nationItem)
                 {
-                    Workers[i].Item2.CancelAsync();
-                    Workers.RemoveAt(i);
+                    this.Workers[i].Item2.CancelAsync();
+                    this.Workers.RemoveAt(i);
                 }
             }
 
@@ -854,12 +854,12 @@ namespace Auralia.NationStates.NationManager
             nationItem.SubItems[2].Text = "?";
             nationItem.SubItems[3].Text = "Attempting to retrieve this nation's information...";
 
-            for (var i = Workers.Count - 1; i >= 0; i--)
+            for (var i = this.Workers.Count - 1; i >= 0; i--)
             {
-                if (Workers[i].Item1 == nationItem)
+                if (this.Workers[i].Item1 == nationItem)
                 {
-                    Workers[i].Item2.CancelAsync();
-                    Workers.RemoveAt(i);
+                    this.Workers[i].Item2.CancelAsync();
+                    this.Workers.RemoveAt(i);
                 }
             }
 
@@ -868,7 +868,7 @@ namespace Auralia.NationStates.NationManager
             worker.DoWork += this.RetrieveStatus;
             worker.RunWorkerCompleted += this.CompleteListViewItemUpdate;
 
-            Workers.Add(new Tuple<ListViewItem, BackgroundWorker>(nationItem, worker));
+            this.Workers.Add(new Tuple<ListViewItem, BackgroundWorker>(nationItem, worker));
 
             worker.RunWorkerAsync(nationItem);
         }
@@ -993,12 +993,12 @@ namespace Auralia.NationStates.NationManager
             nationItem.ImageIndex = (int)ListViewItemIcon.Pending;
             nationItem.SubItems[3].Text = "Attempting to log into this nation...";
 
-            for (var i = Workers.Count - 1; i >= 0; i--)
+            for (var i = this.Workers.Count - 1; i >= 0; i--)
             {
-                if (Workers[i].Item1 == nationItem)
+                if (this.Workers[i].Item1 == nationItem)
                 {
-                    Workers[i].Item2.CancelAsync();
-                    Workers.RemoveAt(i);
+                    this.Workers[i].Item2.CancelAsync();
+                    this.Workers.RemoveAt(i);
                 }
             }
 
@@ -1007,7 +1007,7 @@ namespace Auralia.NationStates.NationManager
             worker.DoWork += this.AttemptLogin;
             worker.RunWorkerCompleted += this.CompleteListViewItemUpdate;
 
-            Workers.Add(new Tuple<ListViewItem, BackgroundWorker>(nationItem, worker));
+            this.Workers.Add(new Tuple<ListViewItem, BackgroundWorker>(nationItem, worker));
 
             worker.RunWorkerAsync(new Tuple<string, string, ListViewItem>(nation.Name, nation.Password, nationItem));
         }
@@ -1151,11 +1151,11 @@ namespace Auralia.NationStates.NationManager
                 listView.Sort();
             }
 
-            for (var i = Workers.Count - 1; i >= 0; i--)
+            for (var i = this.Workers.Count - 1; i >= 0; i--)
             {
-                if (Workers[i].Item2 == sender)
+                if (this.Workers[i].Item2 == sender)
                 {
-                    Workers.RemoveAt(i);
+                    this.Workers.RemoveAt(i);
                     break;
                 }
             }
@@ -1188,12 +1188,12 @@ namespace Auralia.NationStates.NationManager
             nationItem.SubItems[2].Text = "?";
             nationItem.SubItems[3].Text = "Attempting to restore this nation...";
 
-            for (var i = Workers.Count - 1; i >= 0; i--)
+            for (var i = this.Workers.Count - 1; i >= 0; i--)
             {
-                if (Workers[i].Item1 == nationItem)
+                if (this.Workers[i].Item1 == nationItem)
                 {
-                    Workers[i].Item2.CancelAsync();
-                    Workers.RemoveAt(i);
+                    this.Workers[i].Item2.CancelAsync();
+                    this.Workers.RemoveAt(i);
                 }
             }
 
@@ -1202,7 +1202,7 @@ namespace Auralia.NationStates.NationManager
             worker.DoWork += this.AttemptRestore;
             worker.RunWorkerCompleted += this.CompleteListViewItemUpdate;
 
-            Workers.Add(new Tuple<ListViewItem, BackgroundWorker>(nationItem, worker));
+            this.Workers.Add(new Tuple<ListViewItem, BackgroundWorker>(nationItem, worker));
 
             worker.RunWorkerAsync(new Tuple<string, string, ListViewItem>(nation.Name, nation.Password, nationItem));
         }
@@ -1396,6 +1396,7 @@ namespace Auralia.NationStates.NationManager
                     break;
                 }
             }
+
             if (listView.SelectedItems.Count == 0)
             {
                 allExist = false;
