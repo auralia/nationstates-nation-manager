@@ -1,14 +1,14 @@
 # NationStates Nation Manager #
 
 ## Overview ##
-NationStates Nation Manager is a free and open source Windows application that displays the status of a user-specified list of nations. The application can also log into these nations or restore them if they have ceased to exist. 
+NationStates Nation Manager is a free and open source Windows application that displays the status of a list of nations. The application can also log into these nations or restore them if they have ceased to exist. 
 
-The application is designed help players maintain a large number of puppets.
+The application is designed to help players maintain a large number of puppet nations.
 
 ## Features ##
-* Retrieves existence status and last login date for nations
-* Logs into nations to prevent them from ceasing to exist (CTE'ing)
-* Restores nations that have ceased to exist (CTE'd)
+* Retrieves the status of nations, including whether or not they exist and their last login date
+* Logs into nations to prevent them from ceasing to exist
+* Restores nations that have ceased to exist
 
 ## Documentation ##
 
@@ -20,74 +20,70 @@ The application is designed help players maintain a large number of puppets.
 
 #### Adding a nation ####
 1. Click on the menu item labelled *Nations*, then click *Add...*. 
-2. Type in the name and password of a nation, and then click *OK*.
+2. Type in the name and password of a nation, and then click *OK*. The nation will appear in the list view, and its status will refresh.
 
 #### Editing a nation ####
 1. Click on the menu item labelled *Nations*, then click *Edit...*. 
-2. Edit the name and password of the nation, and then click *OK*.
+2. Edit the name and password of the nation, and then click *OK*. The updated nation will appear in the list view, and its status will refresh.
 
 #### Refreshing a nation's status #####
 1. Select the nations whose statuses you wish to refresh.
-2. Click on the menu item labelled *Nations*, then click  *Refresh*.
-3. The status field of each nation will update.
+2. Click on the menu item labelled *Nations*, then click *Refresh*. The nation's status will refresh.
 
 #### Removing a nation #####
 1. Select the nations you wish to remove.
-2. Click on the menu item labelled *Nations*, then click  *Remove*.
+2. Click on the menu item labelled *Nations*, then click *Remove*. The nation will be removed from the list view.
 
 #### Logging into a nation #####
 1. Select the nations you wish to log into.
-2. Click on the menu item labelled *Nations*, then click  *Login*.
-3. the status field of each nation will update. If the login attempt succeeded, the last login date will change to the present date and time. If the login attempt failed, an error message will appear.
+2. Click on the menu item labelled *Nations*, then click *Login*. The application will attempt to log into the nation and display a success or error message, and its status will refresh.
 
-**Note**: You cannot log into a nation that does not currently exist or whose status has not yet been successfully retrieved. In the latter case, you will need to refresh the nation's status until it is successfully retrieved.
+**Note**: You cannot log into a nation that does not currently exist or whose status has not yet been successfully retrieved due to network issues. In the latter case, you will need to refresh the nation's status until it is successfully retrieved.
 
-#### Restoring a nation ####
+#### Restoring a nation that has ceased to exist ####
 1. Select the nations you wish to restore.
-2. Click on the menu item labelled *Nations*, then click  *Restore*.
+2. Click on the menu item labelled *Nations*, then click *Restore*. The application will attempt to restore the nation and display a success or error message, and its status will refresh.
 
-**Note**: You cannot log into a nation that does not currently exist or whose status has not yet been successfully retrieved. In the latter case, you will need to refresh the nation's status until it is successfully retrieved.
-
-In addition, you cannot restore more than one nation at a time, due to NationStates scripting restrictions.
+**Note**: You cannot log into a nation that does not currently exist or whose status has not yet been successfully retrieved due to network issues. In the latter case, you will need to refresh the nation's status until it is successfully retrieved. In addition, you cannot restore more than one nation at a time, due to NationStates scripting restrictions.
 
 #### Creating a new list of nations ####
-1. Click on the menu item labelled *File*, then click  *New*.
+1. Click on the menu item labelled *File*, then click *New*. All nations will be removed from the list view. You may be prompted to save the existing list of nations.
 
 #### Saving a list of nations ####
 
 ##### As encrypted binary data #####
 1. Click on the Menu item labelled *File*, then click *Save As...*.
 2. Choose a destination to save the file, then click *OK*.
-3. Choose a password, then click *OK*.
+3. Choose a password, then click *OK*. The list of nations will be saved to disk.
 
 **Note**: The file containing the list of nations is encrypted using the AES algorithm and a 128 bit key. If you lose the password, you will be unable to open the file and the data contained within cannot be recovered.
 
 ##### As plain text ######
 1. Click on the Menu item labelled *File*, then click *Export...*
-2. Choose a destination to save the file, then click *OK*.
+2. Choose a destination to save the file, then click *OK*. The list of nations will be saved to disk.
 
-**Note**: The list of nations (and their corresponding passwords) will be saved in the comma separated values file format:
+**Note**: The list of nations and their passwords will be saved in a comma separated values format:
 
 	Nation1, Password1
 	Nation2, Password2
 	Nation3, Password3
-	[...]
 
 #### Opening a list of nations ####
 
 ##### As encrypted binary data #####
 1. Click on the Menu item labelled *File*, then click *Open...*.
 2. Choose the file to open, then click *OK*.
-3. Enter the file's password, then click *OK*. 
+3. Enter the file's password, then click *OK*. The file will be opened and a list of nations will be read from disk. You may be prompted to save the existing list of nations.
 
 ##### As plain text ######
 1. Click on the Menu item labelled *File*, then click *Open...*.
-2. Choose the file to open, then click *OK*.
+2. Choose the file to open, then click *OK*. The file will be opened and a list of nations will be read from disk. You may be prompted to save the existing list of nations.
+
+**Note**: The nation file must be in the comma separated values format described above.
 
 #### Changing the user agent ####
-
 1. Click on the menu item labelled *Tools*, then click *Options*.
-2. Type in a user agent in the text box labelled *User agent*, then click *OK*.
+2. Type in a user agent in the text box labelled *User agent*, then click *OK*. The user agent will be changed.
 
 **Note**: You cannot use the application without setting a user agent. You will be prompted to do so when the application starts for the first time.
 
