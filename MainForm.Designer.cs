@@ -85,7 +85,7 @@
             this.helpToolStripMenuItem});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
-            this.menuStrip.Size = new System.Drawing.Size(984, 24);
+            this.menuStrip.Size = new System.Drawing.Size(784, 24);
             this.menuStrip.TabIndex = 0;
             this.menuStrip.Text = "menuStrip";
             // 
@@ -295,7 +295,7 @@
             this.listView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.listView.Location = new System.Drawing.Point(0, 24);
             this.listView.Name = "listView";
-            this.listView.Size = new System.Drawing.Size(984, 437);
+            this.listView.Size = new System.Drawing.Size(784, 337);
             this.listView.SmallImageList = this.imageList;
             this.listView.TabIndex = 9;
             this.listView.UseCompatibleStateImageBehavior = false;
@@ -306,7 +306,7 @@
             // nationColumnHeader
             // 
             this.nationColumnHeader.Text = "Nation";
-            this.nationColumnHeader.Width = 175;
+            this.nationColumnHeader.Width = 200;
             // 
             // existsColumnHeader
             // 
@@ -321,7 +321,7 @@
             // statusColumnHeader
             // 
             this.statusColumnHeader.Text = "Status";
-            this.statusColumnHeader.Width = 630;
+            this.statusColumnHeader.Width = 405;
             // 
             // contextMenuStrip
             // 
@@ -411,7 +411,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(984, 461);
+            this.ClientSize = new System.Drawing.Size(784, 361);
             this.Controls.Add(this.listView);
             this.Controls.Add(this.menuStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));

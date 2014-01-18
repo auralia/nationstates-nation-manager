@@ -45,9 +45,11 @@ namespace Auralia.NationStates.NationManager
             this.Nations = new List<Nation>();
             this.NationStatesApi = new Api.Api(this.UserAgent);
 
-            this.listView.Sorting = SortOrder.Ascending;
-            this.listView.Tag = 0;
-            this.listView.ListViewItemSorter = new ListViewItemComparer(0, SortOrder.Ascending);
+            this.Workers = new List<Tuple<ListViewItem, BackgroundWorker>>();
+
+            this.listView.Sorting = SortOrder.Descending;
+            this.listView.Tag = 1;
+            this.listView.ListViewItemSorter = new ListViewItemComparer(1, SortOrder.Descending);
         }
 
         /// <summary>
@@ -204,6 +206,16 @@ namespace Auralia.NationStates.NationManager
         }
 
         /// <summary>
+        /// Gets or sets a list of <see cref="BackgroundWorker"/> objects associated with particular <see cref="ListViewItem"/> objects.
+        /// </summary>
+        /// <value>A list of <see cref="BackgroundWorker"/> objects associated with particular <see cref="ListViewItem"/> objects.</value>
+        private List<Tuple<ListViewItem, BackgroundWorker>> Workers
+        {
+            get;
+            set;
+        }
+
+        /// <summary>
         /// This method is invoked when the New tool strip menu item is clicked.
         /// </summary>
         /// <param name="sender">The object that raised the event.</param>
@@ -230,6 +242,11 @@ namespace Auralia.NationStates.NationManager
         private void ResetNations()
         {
             this.Text = "NationStates Nation Manager - Untitled";
+
+            if (this.OpenFileStream != null)
+            {
+                this.OpenFileStream.Close();
+            }
 
             this.OpenFileStream = null;
             this.OpenFileName = null;
@@ -724,9 +741,21 @@ namespace Auralia.NationStates.NationManager
 
             listView.Items.Add(nationItem);
 
+            for (var i = Workers.Count - 1; i >= 0; i--)
+            {
+                if (Workers[i].Item1 == nationItem)
+                {
+                    Workers[i].Item2.CancelAsync();
+                    Workers.RemoveAt(i);
+                }
+            }
+
             BackgroundWorker worker = new BackgroundWorker();
+            worker.WorkerSupportsCancellation = true;
             worker.DoWork += this.RetrieveStatus;
             worker.RunWorkerCompleted += this.CompleteListViewItemUpdate;
+
+            Workers.Add(new Tuple<ListViewItem, BackgroundWorker>(nationItem, worker));
 
             worker.RunWorkerAsync(nationItem);
         }
@@ -784,6 +813,15 @@ namespace Auralia.NationStates.NationManager
         /// <param name="nationItem">The <see cref="ListViewItem"/> object representing the puppet to be removed.</param>
         private void RemoveNation(ListViewItem nationItem)
         {
+            for (var i = Workers.Count - 1; i >= 0; i--)
+            {
+                if (Workers[i].Item1 == nationItem)
+                {
+                    Workers[i].Item2.CancelAsync();
+                    Workers.RemoveAt(i);
+                }
+            }
+
             var nation = (Nation)nationItem.Tag;
             this.Nations.Remove(nation);
 
@@ -816,9 +854,21 @@ namespace Auralia.NationStates.NationManager
             nationItem.SubItems[2].Text = "?";
             nationItem.SubItems[3].Text = "Attempting to retrieve this nation's information...";
 
+            for (var i = Workers.Count - 1; i >= 0; i--)
+            {
+                if (Workers[i].Item1 == nationItem)
+                {
+                    Workers[i].Item2.CancelAsync();
+                    Workers.RemoveAt(i);
+                }
+            }
+
             BackgroundWorker worker = new BackgroundWorker();
+            worker.WorkerSupportsCancellation = true;
             worker.DoWork += this.RetrieveStatus;
             worker.RunWorkerCompleted += this.CompleteListViewItemUpdate;
+
+            Workers.Add(new Tuple<ListViewItem, BackgroundWorker>(nationItem, worker));
 
             worker.RunWorkerAsync(nationItem);
         }
@@ -830,11 +880,23 @@ namespace Auralia.NationStates.NationManager
         /// <param name="e">A <see cref="DoWorkEventArgs"/> object that contains the event data.</param>
         private void RetrieveStatus(object sender, DoWorkEventArgs e)
         {
+            if (((BackgroundWorker)sender).CancellationPending)
+            {
+                e.Result = null;
+                return;
+            }
+
             var nationItem = (ListViewItem)e.Argument;
             var nation = (Nation)nationItem.Tag;
 
             lock (Locker)
             {
+                if (((BackgroundWorker)sender).CancellationPending)
+                {
+                    e.Result = null;
+                    return;
+                }
+
                 var nationInformation = this.RetrieveNationInformation(nation.Name);
 
                 var exists = nationInformation.Item1;
@@ -931,9 +993,21 @@ namespace Auralia.NationStates.NationManager
             nationItem.ImageIndex = (int)ListViewItemIcon.Pending;
             nationItem.SubItems[3].Text = "Attempting to log into this nation...";
 
+            for (var i = Workers.Count - 1; i >= 0; i--)
+            {
+                if (Workers[i].Item1 == nationItem)
+                {
+                    Workers[i].Item2.CancelAsync();
+                    Workers.RemoveAt(i);
+                }
+            }
+
             BackgroundWorker worker = new BackgroundWorker();
+            worker.WorkerSupportsCancellation = true;
             worker.DoWork += this.AttemptLogin;
             worker.RunWorkerCompleted += this.CompleteListViewItemUpdate;
+
+            Workers.Add(new Tuple<ListViewItem, BackgroundWorker>(nationItem, worker));
 
             worker.RunWorkerAsync(new Tuple<string, string, ListViewItem>(nation.Name, nation.Password, nationItem));
         }
@@ -945,6 +1019,12 @@ namespace Auralia.NationStates.NationManager
         /// <param name="e">A <see cref="DoWorkEventArgs"/> object that contains the event data.</param>
         private void AttemptLogin(object sender, DoWorkEventArgs e)
         {
+            if (((BackgroundWorker)sender).CancellationPending)
+            {
+                e.Result = null;
+                return;
+            }
+
             var loginInformation = (Tuple<string, string, ListViewItem>)e.Argument;
             var nation = loginInformation.Item1;
             var password = loginInformation.Item2;
@@ -958,6 +1038,12 @@ namespace Auralia.NationStates.NationManager
             {
                 try
                 {
+                    if (((BackgroundWorker)sender).CancellationPending)
+                    {
+                        e.Result = null;
+                        return;
+                    }
+
                     CookieContainer cookieContainer = new CookieContainer();
 
                     HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://www.nationstates.net/");
@@ -1020,47 +1106,59 @@ namespace Auralia.NationStates.NationManager
         /// <param name="e">A <see cref="RunWorkerCompletedEventArgs"/> object that contains the event data.</param>
         private void CompleteListViewItemUpdate(object sender, RunWorkerCompletedEventArgs e)
         {
-            var tuple = (Tuple<ListViewItemIcon, bool?, DateTime?, string, ListViewItem>)e.Result;
-            var icon = tuple.Item1;
-            var exists = tuple.Item2;
-            var lastLogin = tuple.Item3;
-            var statusText = tuple.Item4;
-            var nationItem = tuple.Item5;
+            if (e.Result != null)
+            {
+                var tuple = (Tuple<ListViewItemIcon, bool?, DateTime?, string, ListViewItem>)e.Result;
+                var icon = tuple.Item1;
+                var exists = tuple.Item2;
+                var lastLogin = tuple.Item3;
+                var statusText = tuple.Item4;
+                var nationItem = tuple.Item5;
 
-            nationItem.ImageIndex = (int)icon;
+                nationItem.ImageIndex = (int)icon;
 
-            if (exists == null)
-            {
-                nationItem.SubItems[1].Text = "?";
-            }
-            else if (exists.Value)
-            {
-                nationItem.SubItems[1].Text = "Yes";
-            }
-            else
-            {
-                nationItem.SubItems[1].Text = "No";
+                if (exists == null)
+                {
+                    nationItem.SubItems[1].Text = "?";
+                }
+                else if (exists.Value)
+                {
+                    nationItem.SubItems[1].Text = "Yes";
+                }
+                else
+                {
+                    nationItem.SubItems[1].Text = "No";
+                }
+
+                if (lastLogin == null)
+                {
+                    nationItem.SubItems[2].Text = "?";
+                }
+                else
+                {
+                    nationItem.SubItems[2].Text = lastLogin.Value.ToLocalTime().ToShortDateString() + " " + lastLogin.Value.ToLocalTime().ToShortTimeString();
+                }
+
+                if (statusText == null)
+                {
+                    nationItem.SubItems[3].Text = string.Empty;
+                }
+                else
+                {
+                    nationItem.SubItems[3].Text = statusText;
+                }
+
+                listView.Sort();
             }
 
-            if (lastLogin == null)
+            for (var i = Workers.Count - 1; i >= 0; i--)
             {
-                nationItem.SubItems[2].Text = "?";
+                if (Workers[i].Item2 == sender)
+                {
+                    Workers.RemoveAt(i);
+                    break;
+                }
             }
-            else
-            {
-                nationItem.SubItems[2].Text = lastLogin.Value.ToLocalTime().ToShortDateString() + " " + lastLogin.Value.ToLocalTime().ToShortTimeString();
-            }
-
-            if (statusText == null)
-            {
-                nationItem.SubItems[3].Text = string.Empty;
-            }
-            else
-            {
-                nationItem.SubItems[3].Text = statusText;
-            }
-
-            listView.Sort();
         }
 
         /// <summary>
@@ -1090,9 +1188,21 @@ namespace Auralia.NationStates.NationManager
             nationItem.SubItems[2].Text = "?";
             nationItem.SubItems[3].Text = "Attempting to restore this nation...";
 
+            for (var i = Workers.Count - 1; i >= 0; i--)
+            {
+                if (Workers[i].Item1 == nationItem)
+                {
+                    Workers[i].Item2.CancelAsync();
+                    Workers.RemoveAt(i);
+                }
+            }
+
             BackgroundWorker worker = new BackgroundWorker();
+            worker.WorkerSupportsCancellation = true;
             worker.DoWork += this.AttemptRestore;
             worker.RunWorkerCompleted += this.CompleteListViewItemUpdate;
+
+            Workers.Add(new Tuple<ListViewItem, BackgroundWorker>(nationItem, worker));
 
             worker.RunWorkerAsync(new Tuple<string, string, ListViewItem>(nation.Name, nation.Password, nationItem));
         }
@@ -1104,6 +1214,12 @@ namespace Auralia.NationStates.NationManager
         /// <param name="e">A <see cref="DoWorkEventArgs"/> object that contains the event data.</param>
         private void AttemptRestore(object sender, DoWorkEventArgs e)
         {
+            if (((BackgroundWorker)sender).CancellationPending)
+            {
+                e.Result = null;
+                return;
+            }
+
             var loginInformation = (Tuple<string, string, ListViewItem>)e.Argument;
             var nation = loginInformation.Item1;
             var password = loginInformation.Item2;
@@ -1117,6 +1233,12 @@ namespace Auralia.NationStates.NationManager
             {
                 try
                 {
+                    if (((BackgroundWorker)sender).CancellationPending)
+                    {
+                        e.Result = null;
+                        return;
+                    }
+
                     CookieContainer cookieContainer = new CookieContainer();
 
                     HttpWebRequest request = (HttpWebRequest)WebRequest.Create("http://www.nationstates.net/");
@@ -1273,6 +1395,10 @@ namespace Auralia.NationStates.NationManager
                     allExist = false;
                     break;
                 }
+            }
+            if (listView.SelectedItems.Count == 0)
+            {
+                allExist = false;
             }
 
             loginToolStripMenuItem.Enabled = allExist;
