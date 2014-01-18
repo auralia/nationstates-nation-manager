@@ -57,6 +57,8 @@
             this.aboutToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.listView = new System.Windows.Forms.ListView();
             this.nationColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.existsColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.lastLoginColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.statusColumnHeader = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.contextMenuStrip = new System.Windows.Forms.ContextMenuStrip(this.components);
             this.editToolStripMenuItem1 = new System.Windows.Forms.ToolStripMenuItem();
@@ -83,7 +85,7 @@
             this.helpToolStripMenuItem});
             this.menuStrip.Location = new System.Drawing.Point(0, 0);
             this.menuStrip.Name = "menuStrip";
-            this.menuStrip.Size = new System.Drawing.Size(584, 24);
+            this.menuStrip.Size = new System.Drawing.Size(984, 24);
             this.menuStrip.TabIndex = 0;
             this.menuStrip.Text = "menuStrip";
             // 
@@ -278,7 +280,7 @@
             // aboutToolStripMenuItem
             // 
             this.aboutToolStripMenuItem.Name = "aboutToolStripMenuItem";
-            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.aboutToolStripMenuItem.Size = new System.Drawing.Size(107, 22);
             this.aboutToolStripMenuItem.Text = "About";
             this.aboutToolStripMenuItem.Click += new System.EventHandler(this.AboutToolStripMenuItem_Click);
             // 
@@ -286,28 +288,40 @@
             // 
             this.listView.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.nationColumnHeader,
+            this.existsColumnHeader,
+            this.lastLoginColumnHeader,
             this.statusColumnHeader});
             this.listView.ContextMenuStrip = this.contextMenuStrip;
             this.listView.Dock = System.Windows.Forms.DockStyle.Fill;
             this.listView.Location = new System.Drawing.Point(0, 24);
             this.listView.Name = "listView";
-            this.listView.Size = new System.Drawing.Size(584, 337);
+            this.listView.Size = new System.Drawing.Size(984, 437);
             this.listView.SmallImageList = this.imageList;
-            this.listView.Sorting = System.Windows.Forms.SortOrder.Ascending;
             this.listView.TabIndex = 9;
             this.listView.UseCompatibleStateImageBehavior = false;
             this.listView.View = System.Windows.Forms.View.Details;
+            this.listView.ColumnClick += new System.Windows.Forms.ColumnClickEventHandler(this.ListView_ColumnClick);
             this.listView.SelectedIndexChanged += new System.EventHandler(this.ListView_SelectedIndexChanged);
             // 
             // nationColumnHeader
             // 
             this.nationColumnHeader.Text = "Nation";
-            this.nationColumnHeader.Width = 176;
+            this.nationColumnHeader.Width = 175;
+            // 
+            // existsColumnHeader
+            // 
+            this.existsColumnHeader.Text = "Exists?";
+            this.existsColumnHeader.Width = 50;
+            // 
+            // lastLoginColumnHeader
+            // 
+            this.lastLoginColumnHeader.Text = "Last Login";
+            this.lastLoginColumnHeader.Width = 125;
             // 
             // statusColumnHeader
             // 
             this.statusColumnHeader.Text = "Status";
-            this.statusColumnHeader.Width = 404;
+            this.statusColumnHeader.Width = 630;
             // 
             // contextMenuStrip
             // 
@@ -362,6 +376,7 @@
             this.restoreToolStripMenuItem1.Name = "restoreToolStripMenuItem1";
             this.restoreToolStripMenuItem1.Size = new System.Drawing.Size(117, 22);
             this.restoreToolStripMenuItem1.Text = "Restore";
+            this.restoreToolStripMenuItem1.Click += new System.EventHandler(this.RestoreToolStripMenuItem_Click);
             // 
             // imageList
             // 
@@ -396,7 +411,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(584, 361);
+            this.ClientSize = new System.Drawing.Size(984, 461);
             this.Controls.Add(this.listView);
             this.Controls.Add(this.menuStrip);
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
@@ -455,6 +470,8 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator5;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator3;
         private System.Windows.Forms.ToolStripMenuItem restoreToolStripMenuItem1;
+        private System.Windows.Forms.ColumnHeader existsColumnHeader;
+        private System.Windows.Forms.ColumnHeader lastLoginColumnHeader;
 
     }
 }

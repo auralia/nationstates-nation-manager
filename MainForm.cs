@@ -7,6 +7,7 @@
 namespace Auralia.NationStates.NationManager
 {
     using System;
+    using System.Collections;
     using System.Collections.Generic;
     using System.ComponentModel;
     using System.IO;
@@ -43,30 +44,34 @@ namespace Auralia.NationStates.NationManager
 
             this.Nations = new List<Nation>();
             this.NationStatesApi = new Api.Api(this.UserAgent);
+
+            this.listView.Sorting = SortOrder.Ascending;
+            this.listView.Tag = 0;
+            this.listView.ListViewItemSorter = new ListViewItemComparer(0, SortOrder.Ascending);
         }
 
         /// <summary>
-        /// Represents the status of a nation.
+        /// Represents the different status icons for a nation's list view entry.
         /// </summary>
-        private enum NationStatus
+        private enum ListViewItemIcon
         {
             /// <summary>
-            /// Represents that the puppet exists.
+            /// Represents a successful status.
             /// </summary>
-            Exists = 0,
+            Success = 0,
 
             /// <summary>
-            /// Represents that the puppet does not exist.
+            /// Represents a failure status.
             /// </summary>
-            DoesNotExist = 1,
+            Failure = 1,
 
             /// <summary>
-            /// Represents that the puppet may or may not exist.
+            /// Represents a warning status.
             /// </summary>
-            Unknown = 2,
+            Warning = 2,
 
             /// <summary>
-            /// Represents that a determination of the puppet's existence is pending. 
+            /// Represents a pending status.
             /// </summary>
             Pending = 3
         }
@@ -711,14 +716,17 @@ namespace Auralia.NationStates.NationManager
             this.Nations.Add(nation);
 
             var nationItem = new ListViewItem(nation.Name);
-            nationItem.ImageIndex = (int)NationStatus.Pending;
-            nationItem.SubItems.Add(new ListViewItem.ListViewSubItem(nationItem, "Attempting to retrieve the nation's status..."));
+            nationItem.Tag = nation;
+            nationItem.ImageIndex = (int)ListViewItemIcon.Pending;
+            nationItem.SubItems.Add(new ListViewItem.ListViewSubItem(nationItem, "?"));
+            nationItem.SubItems.Add(new ListViewItem.ListViewSubItem(nationItem, "?"));
+            nationItem.SubItems.Add(new ListViewItem.ListViewSubItem(nationItem, "Attempting to retrieve this nation's information..."));
 
             listView.Items.Add(nationItem);
 
             BackgroundWorker worker = new BackgroundWorker();
             worker.DoWork += this.RetrieveStatus;
-            worker.RunWorkerCompleted += this.UpdateStatus;
+            worker.RunWorkerCompleted += this.CompleteListViewItemUpdate;
 
             worker.RunWorkerAsync(nationItem);
         }
@@ -803,13 +811,14 @@ namespace Auralia.NationStates.NationManager
         {
             var nation = (Nation)nationItem.Tag;
 
-            nationItem.ImageIndex = (int)NationStatus.Pending;
-            nationItem.SubItems.RemoveAt(1);
-            nationItem.SubItems.Add(new ListViewItem.ListViewSubItem(nationItem, "Attempting to retrieve the nation's status..."));
+            nationItem.ImageIndex = (int)ListViewItemIcon.Pending;
+            nationItem.SubItems[1].Text = "?";
+            nationItem.SubItems[2].Text = "?";
+            nationItem.SubItems[3].Text = "Attempting to retrieve this nation's information...";
 
             BackgroundWorker worker = new BackgroundWorker();
             worker.DoWork += this.RetrieveStatus;
-            worker.RunWorkerCompleted += this.UpdateStatus;
+            worker.RunWorkerCompleted += this.CompleteListViewItemUpdate;
 
             worker.RunWorkerAsync(nationItem);
         }
@@ -824,62 +833,78 @@ namespace Auralia.NationStates.NationManager
             var nationItem = (ListViewItem)e.Argument;
             var nation = (Nation)nationItem.Tag;
 
-            NationStatus statusType = default(NationStatus);
-            string statusText = null;
             lock (Locker)
             {
-                try
+                var nationInformation = this.RetrieveNationInformation(nation.Name);
+
+                var exists = nationInformation.Item1;
+                var lastLogin = nationInformation.Item2;
+
+                if (!exists.HasValue)
                 {
-                    var shards = new Api.NationShards();
-                    shards.LastLogin = true;
-
-                    var nationData = this.NationStatesApi.CreateNationApiRequest(nation.Name, shards);
-
-                    statusType = NationStatus.Exists;
-                    statusText = "This nation exists and was last logged into on " + nationData.LastLogin.Value.ToLocalTime().ToShortDateString() + " " + nationData.LastLogin.Value.ToLocalTime().ToShortTimeString() + ".";
-
-                    e.Result = new Tuple<NationStatus, string, ListViewItem>(statusType, statusText, nationItem);
-                    return;
+                    var icon = ListViewItemIcon.Warning;
+                    var statusText = "A network error occured while attempting to retrieve this nation's information. Are you connected to the Internet?";
+                    
+                    e.Result = new Tuple<ListViewItemIcon, bool?, DateTime?, string, ListViewItem>(icon, exists, lastLogin, statusText, nationItem);
                 }
-                catch (Exception ex)
+                else if (exists.Value) 
                 {
-                    if (ex.InnerException != null && ex.InnerException is WebException)
-                    {
-                        var webEx = (WebException)ex.InnerException;
-                        if (webEx.Response != null && ((HttpWebResponse)webEx.Response).StatusCode == HttpStatusCode.NotFound)
-                        {
-                            statusType = NationStatus.DoesNotExist;
-                            statusText = "This nation does not exist. The nation may have ceased to exist or it may never have been created.";
+                    var icon = ListViewItemIcon.Success;
+                    var statusText = string.Empty;
 
-                            e.Result = new Tuple<NationStatus, string, ListViewItem>(statusType, statusText, nationItem);
-                            return;
-                        }
-                    }
+                    e.Result = new Tuple<ListViewItemIcon, bool?, DateTime?, string, ListViewItem>(icon, exists, lastLogin, statusText, nationItem);
+                }
+                else 
+                {
+                    var icon = ListViewItemIcon.Failure;
+                    var statusText = string.Empty;
 
-                    statusType = NationStatus.Unknown;
-                    statusText = "This nation's status could not be determined. Are you connected to the Internet?";
-
-                    e.Result = new Tuple<NationStatus, string, ListViewItem>(statusType, statusText, nationItem);
-                    return;
+                    e.Result = new Tuple<ListViewItemIcon, bool?, DateTime?, string, ListViewItem>(icon, exists, lastLogin, statusText, nationItem);
                 }
             }
         }
-        
-        /// <summary>
-        /// Updates the status of a nation once it has been retrieved. This method is invoked by a BackgroundWorker when it finishes doing work.
-        /// </summary>
-        /// <param name="sender">The object that raised the event.</param>
-        /// <param name="e">A <see cref="RunWorkerCompletedEventArgs"/> object that contains the event data.</param>
-        private void UpdateStatus(object sender, RunWorkerCompletedEventArgs e)
-        {
-            var statusTuple = (Tuple<NationStatus, string, ListViewItem>)e.Result;
-            var statusType = statusTuple.Item1;
-            var statusText = statusTuple.Item2;
-            var nationItem = statusTuple.Item3;
 
-            nationItem.ImageIndex = (int)statusType;
-            nationItem.SubItems.RemoveAt(1);
-            nationItem.SubItems.Add(new ListViewItem.ListViewSubItem(nationItem, statusText));
+        /// <summary>
+        /// Retrieves information about a nation, specifically whether or not the nation exists and the last login date and time for the nation.
+        /// </summary>
+        /// <param name="nation">The nation's name.</param>
+        /// <returns>A <see cref="Tuple"/> object representing whether or not the nation exists and the last login date and time for the nation.</returns>
+        private Tuple<bool?, DateTime?> RetrieveNationInformation(string nation)
+        {
+            bool? exists = null;
+            DateTime? lastLogin = null;
+
+            try
+            {
+                var shards = new Api.NationShards();
+                shards.LastLogin = true;
+
+                var nationData = this.NationStatesApi.CreateNationApiRequest(nation, shards);
+
+                exists = true;
+                lastLogin = nationData.LastLogin.Value;
+
+                return new Tuple<bool?, DateTime?>(exists, lastLogin);
+            }
+            catch (Exception ex)
+            {
+                if (ex.InnerException != null && ex.InnerException is WebException)
+                {
+                    var webEx = (WebException)ex.InnerException;
+                    if (webEx.Response != null && ((HttpWebResponse)webEx.Response).StatusCode == HttpStatusCode.NotFound)
+                    {
+                        exists = false;
+                        lastLogin = null;
+
+                        return new Tuple<bool?, DateTime?>(exists, lastLogin);
+                    }
+                }
+
+                exists = null;
+                lastLogin = null;
+
+                return new Tuple<bool?, DateTime?>(exists, lastLogin);
+            }
         }
 
         /// <summary>
@@ -903,13 +928,12 @@ namespace Auralia.NationStates.NationManager
         {
             var nation = (Nation)nationItem.Tag;
 
-            nationItem.ImageIndex = (int)NationStatus.Pending;
-            nationItem.SubItems.RemoveAt(1);
-            nationItem.SubItems.Add(new ListViewItem.ListViewSubItem(nationItem, "Attempting to log into nation..."));
+            nationItem.ImageIndex = (int)ListViewItemIcon.Pending;
+            nationItem.SubItems[3].Text = "Attempting to log into this nation...";
 
             BackgroundWorker worker = new BackgroundWorker();
             worker.DoWork += this.AttemptLogin;
-            worker.RunWorkerCompleted += this.CompleteLogin;
+            worker.RunWorkerCompleted += this.CompleteListViewItemUpdate;
 
             worker.RunWorkerAsync(new Tuple<string, string, ListViewItem>(nation.Name, nation.Password, nationItem));
         }
@@ -926,6 +950,10 @@ namespace Auralia.NationStates.NationManager
             var password = loginInformation.Item2;
             var nationItem = loginInformation.Item3;
 
+            ListViewItemIcon icon = default(ListViewItemIcon);
+            bool? exists = null;
+            DateTime? lastLogin = null;
+            string statusText = null;
             lock (Locker)
             {
                 try
@@ -953,29 +981,86 @@ namespace Auralia.NationStates.NationManager
 
                     this.LastLoginAttemptTime = DateTime.UtcNow;
 
+                    var statusTuple = this.RetrieveNationInformation(nation);
+                    exists = statusTuple.Item1;
+                    lastLogin = statusTuple.Item2;
+
                     if (cookieContainer.GetCookies(new Uri("http://www.nationstates.net")).Count == 0)
                     {
-                        MessageBox.Show("An error occurred while logging into the nation " + nation + ". Did you enter the correct username and password?", "NationStates Nation Manager");
+                        icon = ListViewItemIcon.Failure;
+                        statusText = "An error occured while attempting to log into this nation. Did you enter the correct username and password?";
+
+                        e.Result = new Tuple<ListViewItemIcon, bool?, DateTime?, string, ListViewItem>(icon, exists, lastLogin, statusText, nationItem);
+                        return;
+                    }
+                    else
+                    {
+                        icon = ListViewItemIcon.Success;
+                        statusText = "Successfully logged into this nation on " + DateTime.Now.ToLocalTime().ToShortDateString() + " at " + DateTime.Now.ToLocalTime().ToShortTimeString() + ".";
+
+                        e.Result = new Tuple<ListViewItemIcon, bool?, DateTime?, string, ListViewItem>(icon, exists, lastLogin, statusText, nationItem);
+                        return;
                     }
                 }
                 catch (Exception)
                 {
+                    icon = ListViewItemIcon.Warning;
+                    statusText = "A network error occured while attempting to log into this nation. Are you connected to the Internet?";
+
+                    e.Result = new Tuple<ListViewItemIcon, bool?, DateTime?, string, ListViewItem>(icon, exists, lastLogin, statusText, nationItem);
+                    return;
                 }
             }
-
-            e.Result = nationItem;
         }
 
         /// <summary>
-        /// Updates the login status of a nation once it has been retrieved. This method is invoked by a BackgroundWorker when it finishes doing work.
+        /// Updates the list view item for a nation. This method is invoked by a BackgroundWorker when it finishes doing work.
         /// </summary>
         /// <param name="sender">The object that raised the event.</param>
         /// <param name="e">A <see cref="RunWorkerCompletedEventArgs"/> object that contains the event data.</param>
-        private void CompleteLogin(object sender, RunWorkerCompletedEventArgs e)
+        private void CompleteListViewItemUpdate(object sender, RunWorkerCompletedEventArgs e)
         {
-            var nationItem = (ListViewItem)e.Result;
+            var tuple = (Tuple<ListViewItemIcon, bool?, DateTime?, string, ListViewItem>)e.Result;
+            var icon = tuple.Item1;
+            var exists = tuple.Item2;
+            var lastLogin = tuple.Item3;
+            var statusText = tuple.Item4;
+            var nationItem = tuple.Item5;
 
-            this.RefreshNation(nationItem);
+            nationItem.ImageIndex = (int)icon;
+
+            if (exists == null)
+            {
+                nationItem.SubItems[1].Text = "?";
+            }
+            else if (exists.Value)
+            {
+                nationItem.SubItems[1].Text = "Yes";
+            }
+            else
+            {
+                nationItem.SubItems[1].Text = "No";
+            }
+
+            if (lastLogin == null)
+            {
+                nationItem.SubItems[2].Text = "?";
+            }
+            else
+            {
+                nationItem.SubItems[2].Text = lastLogin.Value.ToLocalTime().ToShortDateString() + " " + lastLogin.Value.ToLocalTime().ToShortTimeString();
+            }
+
+            if (statusText == null)
+            {
+                nationItem.SubItems[3].Text = string.Empty;
+            }
+            else
+            {
+                nationItem.SubItems[3].Text = statusText;
+            }
+
+            listView.Sort();
         }
 
         /// <summary>
@@ -1000,13 +1085,14 @@ namespace Auralia.NationStates.NationManager
         {
             var nation = (Nation)nationItem.Tag;
 
-            nationItem.ImageIndex = (int)NationStatus.Pending;
-            nationItem.SubItems.RemoveAt(1);
-            nationItem.SubItems.Add(new ListViewItem.ListViewSubItem(nationItem, "Attempting to restore nation..."));
+            nationItem.ImageIndex = (int)ListViewItemIcon.Pending;
+            nationItem.SubItems[1].Text = "?";
+            nationItem.SubItems[2].Text = "?";
+            nationItem.SubItems[3].Text = "Attempting to restore this nation...";
 
             BackgroundWorker worker = new BackgroundWorker();
             worker.DoWork += this.AttemptRestore;
-            worker.RunWorkerCompleted += this.CompleteRestore;
+            worker.RunWorkerCompleted += this.CompleteListViewItemUpdate;
 
             worker.RunWorkerAsync(new Tuple<string, string, ListViewItem>(nation.Name, nation.Password, nationItem));
         }
@@ -1023,6 +1109,10 @@ namespace Auralia.NationStates.NationManager
             var password = loginInformation.Item2;
             var nationItem = loginInformation.Item3;
 
+            ListViewItemIcon icon = default(ListViewItemIcon);
+            bool? exists = null;
+            DateTime? lastLogin = null;
+            string statusText = null;
             lock (Locker)
             {
                 try
@@ -1050,29 +1140,36 @@ namespace Auralia.NationStates.NationManager
 
                     this.LastLoginAttemptTime = DateTime.UtcNow;
 
+                    var statusTuple = this.RetrieveNationInformation(nation);
+                    exists = statusTuple.Item1;
+                    lastLogin = statusTuple.Item2;
+
                     if (cookieContainer.GetCookies(new Uri("http://www.nationstates.net")).Count == 0)
                     {
-                        MessageBox.Show("An error occurred while restoring the nation " + nation + ". Did you enter the correct username and password?", "NationStates Nation Manager");
+                        icon = ListViewItemIcon.Failure;
+                        statusText = "An error occured while attempting to restore this nation. Did you enter the correct username and password?";
+
+                        e.Result = new Tuple<ListViewItemIcon, bool?, DateTime?, string, ListViewItem>(icon, exists, lastLogin, statusText, nationItem);
+                        return;
+                    }
+                    else
+                    {
+                        icon = ListViewItemIcon.Success;
+                        statusText = "Successfully restored this nation on " + DateTime.Now.ToLocalTime().ToShortDateString() + " at " + DateTime.Now.ToLocalTime().ToShortTimeString() + ".";
+
+                        e.Result = new Tuple<ListViewItemIcon, bool?, DateTime?, string, ListViewItem>(icon, exists, lastLogin, statusText, nationItem);
+                        return;
                     }
                 }
                 catch (Exception)
                 {
+                    icon = ListViewItemIcon.Warning;
+                    statusText = "A network error occured while attempting to restore this nation. Are you connected to the Internet?";
+
+                    e.Result = new Tuple<ListViewItemIcon, bool?, DateTime?, string, ListViewItem>(icon, exists, lastLogin, statusText, nationItem);
+                    return;
                 }
             }
-
-            e.Result = nationItem;
-        }
-
-        /// <summary>
-        /// Updates the restore status of a nation once it has been retrieved. This method is invoked by a BackgroundWorker when it finishes doing work.
-        /// </summary>
-        /// <param name="sender">The object that raised the event.</param>
-        /// <param name="e">A <see cref="RunWorkerCompletedEventArgs"/> object that contains the event data.</param>
-        private void CompleteRestore(object sender, RunWorkerCompletedEventArgs e)
-        {
-            var nationItem = (ListViewItem)e.Result;
-
-            this.RefreshNation(nationItem);
         }
 
         /// <summary>
@@ -1171,7 +1268,7 @@ namespace Auralia.NationStates.NationManager
             bool allExist = true;
             foreach (ListViewItem item in listView.SelectedItems)
             {
-                if (item.ImageIndex != (int)NationStatus.Exists)
+                if (!item.SubItems[1].Text.Equals("Yes"))
                 {
                     allExist = false;
                     break;
@@ -1181,8 +1278,38 @@ namespace Auralia.NationStates.NationManager
             loginToolStripMenuItem.Enabled = allExist;
             loginToolStripMenuItem1.Enabled = allExist;
 
-            restoreToolStripMenuItem.Enabled = listView.SelectedItems.Count == 1 && listView.SelectedItems[0].ImageIndex == (int)NationStatus.DoesNotExist;
-            restoreToolStripMenuItem1.Enabled = listView.SelectedItems.Count == 1 && listView.SelectedItems[0].ImageIndex == (int)NationStatus.DoesNotExist;
+            restoreToolStripMenuItem.Enabled = listView.SelectedItems.Count == 1 && listView.SelectedItems[0].SubItems[1].Text.Equals("No");
+            restoreToolStripMenuItem1.Enabled = listView.SelectedItems.Count == 1 && listView.SelectedItems[0].SubItems[1].Text.Equals("No");
+        }
+        
+        /// <summary>
+        /// This method is invoked when a list view column is clicked.
+        /// </summary>
+        /// <param name="sender">The object that raised the event.</param>
+        /// <param name="e">A <see cref="ColumnClickEventArgs"/> object that contains the event data.</param>
+        private void ListView_ColumnClick(object sender, ColumnClickEventArgs e)
+        {
+            var lastColumn = (int)listView.Tag;
+
+            if (e.Column != lastColumn)
+            {
+                listView.Tag = e.Column;
+                listView.Sorting = SortOrder.Ascending;
+            }
+            else
+            {
+                if (listView.Sorting == SortOrder.Ascending)
+                {
+                    listView.Sorting = SortOrder.Descending;
+                }
+                else
+                {
+                    listView.Sorting = SortOrder.Ascending;
+                }
+            }
+
+            this.listView.ListViewItemSorter = new ListViewItemComparer(e.Column, listView.Sorting);
+            this.listView.Sort();
         }
 
         /// <summary>
@@ -1209,6 +1336,65 @@ namespace Auralia.NationStates.NationManager
             aesCryptoServiceProvider.GenerateIV();
 
             return aesCryptoServiceProvider.IV;
+        }
+
+        /// <summary>
+        /// Represents a comparer for list view items.
+        /// </summary>
+        private class ListViewItemComparer : IComparer
+        {
+            /// <summary>
+            /// The column containing the list view items to be sorted.
+            /// </summary>
+            private int column;
+
+            /// <summary>
+            /// The order in which the list view items are to be sorted.
+            /// </summary>
+            private SortOrder order;
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="ListViewItemComparer"/> class.
+            /// </summary>
+            public ListViewItemComparer()
+            {
+                this.column = 0;
+                this.order = SortOrder.Ascending;
+            }
+
+            /// <summary>
+            /// Initializes a new instance of the <see cref="ListViewItemComparer"/> class with the column containing the list view items to be sorted and the order in which the list view items are to be sorted.
+            /// </summary>
+            /// <param name="column">The column containing the list view items to be sorted.</param>
+            /// <param name="order">The order in which the list view items are to be sorted.</param>
+            public ListViewItemComparer(int column, SortOrder order)
+            {
+                this.column = column;
+                this.order = order;
+            }
+
+            /// <summary>
+            /// Compares two objects and returns a value indicating whether one is less than, equal to, or greater than the other.
+            /// </summary>
+            /// <param name="x">The first object to compare.</param>
+            /// <param name="y">The second object to compare.</param>
+            /// <returns>An integer that indicates the relative values of x and y corresponding to whether one is less than, equal to, or greater than the other.</returns>
+            public int Compare(object x, object y) 
+            {
+                int compareValue = string.Compare(((ListViewItem)x).SubItems[this.column].Text, ((ListViewItem)y).SubItems[this.column].Text);
+
+                if (this.order == SortOrder.Descending)
+                {
+                    compareValue *= -1;
+                }
+
+                if (compareValue == 0 && this.column != 0)
+                {
+                    compareValue = string.Compare(((ListViewItem)x).SubItems[0].Text, ((ListViewItem)y).SubItems[0].Text);
+                }
+
+                return compareValue;
+            }
         }
     }
 }
