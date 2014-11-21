@@ -93,14 +93,6 @@ Source code downloads are available from [the project's GitHub page](https://git
 
 Binary downloads of the latest version (0.2) are available from the [author's website](http://www.auralia.me).
 
-## Changelog ##
-* Version 0.2:
-    * Redesigned user interface
-    * Status functionality
-    * Restore functionality
-* Version 0.1:
-	* Initial public release
-
 ## Copyright and License ##
 Copyright (C) 2013 Auralia.
 
