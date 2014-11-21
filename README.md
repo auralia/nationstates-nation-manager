@@ -1,6 +1,6 @@
 # NationStates Nation Manager #
 
-## Overview ##
+## Summary ##
 NationStates Nation Manager is a free and open source Windows application that displays the status of a list of nations. The application can also log into these nations or restore them if they have ceased to exist. 
 
 The application is designed to help players maintain a large number of puppet nations.
@@ -64,9 +64,9 @@ The application is designed to help players maintain a large number of puppet na
 
 **Note**: The list of nations and their passwords will be saved in a comma separated values format:
 
-	Nation1, Password1
-	Nation2, Password2
-	Nation3, Password3
+	Nation1,Password1
+	Nation2,Password2
+	Nation3,Password3
 
 #### Opening a list of nations ####
 
@@ -89,17 +89,7 @@ The application is designed to help players maintain a large number of puppet na
 
 ## Downloads ##
 
-Source code downloads are available from [the project's GitHub page](https://github.com/auralia/nationstates-puppet-manager).
-
-Binary downloads of the latest version (0.2) are available from the [author's website](http://www.auralia.me).
-
-## Changelog ##
-* Version 0.2:
-    * Redesigned user interface
-    * Status functionality
-    * Restore functionality
-* Version 0.1:
-	* Initial public release
+Source code and binary downloads are available from [the project's GitHub page](https://github.com/auralia/nationstates-puppet-manager).
 
 ## Copyright and License ##
 Copyright (C) 2013 Auralia.

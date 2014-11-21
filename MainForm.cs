@@ -430,6 +430,7 @@ namespace Auralia.NationStates.NationManager
                     this.OpenFileStream.SetLength(0);
                     this.OpenFileStream.Write(iv, 0, iv.Length);
                     this.OpenFileStream.Write(encryptedBytes, 0, encryptedBytes.Length);
+                    this.OpenFileStream.Flush();
                 }
                 catch (Exception)
                 {
@@ -518,6 +519,7 @@ namespace Auralia.NationStates.NationManager
                         fileStream = new FileStream(normalSaveFileDialog.FileName, FileMode.Create);
                         fileStream.Write(iv, 0, iv.Length);
                         fileStream.Write(encryptedBytes, 0, encryptedBytes.Length);
+                        fileStream.Flush();
                     }
                     catch (Exception)
                     {

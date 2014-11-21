@@ -41,6 +41,10 @@
     <StartupObject>Auralia.NationStates.NationManager.Program</StartupObject>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="NationStates API, Version=0.2.5396.30969, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\..\..\..\Documents\Programming\NationStates\nationstates-api-for-.net\bin\Release\NationStates API.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="System.Web" />
@@ -124,12 +128,6 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="icon-64x64.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\nationstates-api-for-.net\NationStates API.csproj">
-      <Project>{8a281840-473e-4f85-acfb-1ac19f23099d}</Project>
-      <Name>NationStates API</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <Import Project="$(ProgramFiles)\MSBuild\StyleCop\v4.7\StyleCop.targets" />
